@@ -20,8 +20,10 @@ def main():
         sys.stderr.write("Error reading json file\n")
         sys.exit()
 
-    for item in choices:
-        print item
+    for item in choices: #ndex, (key, value) in enumerate(choices.items):
+        print item, choices[item]
+        # for i in enumerate(item):
+        #     print i
 
 print "Imported file successfully. That is all"
 # Create a dictionary that maps subjects, courses
