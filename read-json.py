@@ -25,16 +25,25 @@ def main():
     # dictionary for courses
     courses = {}
 
-    for item in choices: #ndex, (key, value) in enumerate(choices.items):
+    for item in choices: 
         print item, choices[item]
         if (item[:9] == 'dgre-slot'):
             slot += 1
-            courses[slot] = item[-9:]
+            courses[slot] = choices[item][-9:]
+        elif (item[:8] == 'req_slot'):
+            slot += 1
+            courses[slot] = choices[item][-9:]
+        elif (item[:5] == 'slot-'):
+            if (item[6:7] == ' '):
+                slot += 1
+                courses[slot] = choices[item][-9:]
         # for i in enumerate(item):
         #     print i
 
-    print "There are %d degree slots with courses specified" % slot
-
+    print "There are %d slots with courses specified" % slot
+    print "A total of %d courses were chosen" % len(courses)
+    for i in courses:
+        print courses[i]
 
 # print "Imported file successfully. That is all"
 # Create a dictionary that maps subjects, courses

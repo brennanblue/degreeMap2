@@ -1,0 +1,17 @@
+todo.txt
+
+lookup course credits from uh hilo courses API:
+hilo.hawaii.edu/courses/api/1.1/help.txt
+
+create subject dictionarys / list to know which subject catalogs to injest
+
+lookup each course in catalog, find prereq courses.
+(add subjects course catalogs to repo)
+
+add semester variable (tuple, array? ) to hold array of course slots
+
+start assigning courses to semesters
+
+profit
+
+
