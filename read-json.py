@@ -20,12 +20,23 @@ def main():
         sys.stderr.write("Error reading json file\n")
         sys.exit()
 
+    #iterator
+    slot = 0
+    # dictionary for courses
+    courses = {}
+
     for item in choices: #ndex, (key, value) in enumerate(choices.items):
         print item, choices[item]
+        if (item[:9] == 'dgre-slot'):
+            slot += 1
+            courses[slot] = item[-9:]
         # for i in enumerate(item):
         #     print i
 
-print "Imported file successfully. That is all"
+    print "There are %d degree slots with courses specified" % slot
+
+
+# print "Imported file successfully. That is all"
 # Create a dictionary that maps subjects, courses
     # subject courses = {}
 
