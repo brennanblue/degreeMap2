@@ -28,39 +28,53 @@ def main():
     # dictionaries for courses, subjects
     courses = {}
     subjects = {}
-
+    l = []
     for item in choices: 
-        print item, choices[item]
+        # print item, choices[item]
         if (item[:9] == 'dgre-slot'):
             slot += 1
             courses[slot] = choices[item][-9:].strip()
             parts = courses[slot].split("_")
-            subjects[slot] = parts[0]
+            subjects[parts[1]] = parts[0]
+            # subj = parts[1]
+            # course = parts[0]
+            string = " %s - %s; " % (parts[0], parts[1])
+            l.append(string)
+            # subjects[parts[0]].append(subjects[parts[1]])
+            # str(parts[1]) + ", "
             # make a tuple foreacch subject, store required courses
 
         elif (item[:8] == 'req_slot'):
             slot += 1
             courses[slot] = choices[item][-9:].strip()
             parts = courses[slot].split("_")
-            subjects[slot] = parts[0]
+            subjects[parts[1]] = parts[0]
+            string = " %s - %s; " % (parts[0], parts[1])
+            l.append(string)
+            # subjects[parts[0]] = str(parts[1]) + ", "
         elif (item[:5] == 'slot-'):
             if (item[6:7] == ' '):
                 slot += 1
                 courses[slot] = choices[item][-9:].strip()
                 parts = courses[slot].split("_")
-                subjects[slot] = parts[0]
+                subjects[parts[1]] = parts[0]
+                string = " %s: - %s; " % (parts[0], parts[1])
+                l.append(string)
+                # subjects[parts[0]] = str(parts[1]) + ", "
         # for i in enumerate(item):
         #     print i
+    s = ''.join(l)
+    print s
 
     print "There are %d slots with courses specified" % slot
     print "A total of %d courses were chosen" % len(courses)
 
-    instances = Counter(subjects)
+    # instances = Counter(subjects)
     # print instances.count("MATH")
     print Counter(subjects).most_common()
 
-    for i in courses:
-        print courses[i]
+    # for i in courses:
+    #     print courses[i]
 
     # for i in subjects:
     #     print subjects[i]
@@ -94,6 +108,8 @@ def main():
     # # Print results
     # print(q_list)
 
+def isset(variable):
+    return variable in locals() or variable in globals()
 
 ##########################
 
