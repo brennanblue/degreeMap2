@@ -3,8 +3,6 @@
 import sys
 import json
 import argparse
-from collections import Counter 
-#ht/ http://stackoverflow.com/questions/2600191/
 
 def main():
     # Parse command line arguments
@@ -29,63 +27,44 @@ def main():
     courses = {}
     subjects = {}
     l = []
-    for item in choices: 
-        # print item, choices[item]
-        if (item[:9] == 'dgre-slot'):
+    for i in choices: 
+        # print i, choices[i]
+        if (i[:9] == 'dgre-slot' or i[:8] == 'req_slot'):
             slot += 1
-            courses[slot] = choices[item][-9:].strip()
+            courses[slot] = choices[i][-9:].strip()
             parts = courses[slot].split("_")
             subjects[parts[1]] = parts[0]
-            # subj = parts[1]
-            # course = parts[0]
             string = " %s - %s; " % (parts[0], parts[1])
             l.append(string)
             # subjects[parts[0]].append(subjects[parts[1]])
-            # str(parts[1]) + ", "
-            # make a tuple foreacch subject, store required courses
-
-        elif (item[:8] == 'req_slot'):
-            slot += 1
-            courses[slot] = choices[item][-9:].strip()
-            parts = courses[slot].split("_")
-            subjects[parts[1]] = parts[0]
-            string = " %s - %s; " % (parts[0], parts[1])
-            l.append(string)
-            # subjects[parts[0]] = str(parts[1]) + ", "
-        elif (item[:5] == 'slot-'):
-            if (item[6:7] == ' '):
+        elif (i[:5] == 'slot-'):
+            if (i[6:7] == ' '):
                 slot += 1
-                courses[slot] = choices[item][-9:].strip()
+                courses[slot] = choices[i][-9:].strip()
                 parts = courses[slot].split("_")
                 subjects[parts[1]] = parts[0]
                 string = " %s: - %s; " % (parts[0], parts[1])
                 l.append(string)
-                # subjects[parts[0]] = str(parts[1]) + ", "
-        # for i in enumerate(item):
-        #     print i
+
     s = ''.join(l)
     print s
 
     print "There are %d slots with courses specified" % slot
     print "A total of %d courses were chosen" % len(courses)
 
-    # instances = Counter(subjects)
-    # print instances.count("MATH")
-    print Counter(subjects).most_common()
+    # print subjects.items
+    for k, v in subjects.iteritems():
+        print k, v
 
+    print subjects.keys() # will give you all keys in list
+    print subjects.values() # will give you values in list
+    print subjects.items()  # will give you pair tuple of key and value
     # for i in courses:
     #     print courses[i]
 
     # for i in subjects:
     #     print subjects[i]
-# Create a dictionary that maps subjects, courses
 
-
-
-    # subject courses = {}
-
-#for line in file ? 
-#for json parse args 
     # Read through entries, determine if they are courses
     # for item in catalog['courses']:
     #     courses
