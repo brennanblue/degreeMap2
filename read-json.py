@@ -3,6 +3,8 @@
 import sys
 import json
 import argparse
+from collections import Counter 
+#ht/ http://stackoverflow.com/questions/2600191/
 
 def main():
     # Parse command line arguments
@@ -22,31 +24,50 @@ def main():
 
     #iterator
     slot = 0
-    # dictionary for courses
+
+    # dictionaries for courses, subjects
     courses = {}
+    subjects = {}
 
     for item in choices: 
         print item, choices[item]
         if (item[:9] == 'dgre-slot'):
             slot += 1
-            courses[slot] = choices[item][-9:]
+            courses[slot] = choices[item][-9:].strip()
+            parts = courses[slot].split("_")
+            subjects[slot] = parts[0]
+            # make a tuple foreacch subject, store required courses
+
         elif (item[:8] == 'req_slot'):
             slot += 1
-            courses[slot] = choices[item][-9:]
+            courses[slot] = choices[item][-9:].strip()
+            parts = courses[slot].split("_")
+            subjects[slot] = parts[0]
         elif (item[:5] == 'slot-'):
             if (item[6:7] == ' '):
                 slot += 1
-                courses[slot] = choices[item][-9:]
+                courses[slot] = choices[item][-9:].strip()
+                parts = courses[slot].split("_")
+                subjects[slot] = parts[0]
         # for i in enumerate(item):
         #     print i
 
     print "There are %d slots with courses specified" % slot
     print "A total of %d courses were chosen" % len(courses)
+
+    instances = Counter(subjects)
+    # print instances.count("MATH")
+    print Counter(subjects).most_common()
+
     for i in courses:
         print courses[i]
 
-# print "Imported file successfully. That is all"
+    # for i in subjects:
+    #     print subjects[i]
 # Create a dictionary that maps subjects, courses
+
+
+
     # subject courses = {}
 
 #for line in file ? 
