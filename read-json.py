@@ -32,33 +32,38 @@ def main():
 
     # dictionaries for courses, subjects
     courses = []
-    chosen_courses = {}
+    chosen_courses = []
     courselist = [] #list
     subjlist = [] #list
     chosen = {} #dictionary
     n = 0
     parse = False
-    
+
     for i in choices: 
         # print i, choices[i]
         if (i[:9] == 'dgre-slot' or i[:8] == 'req_slot'):
             slot += 1
             parse = True
+            guts = choices[i][-9:].strip()
+            courses.append(guts)
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
                 slot += 1
                 parse = True
-
+                guts = choices[i][-9:].strip()
+                courses.append(guts)
         if(parse):
-            courses.append(int(slot))
-            courses[slot] = choices[i][-9:].strip()
+            # courses.append(int(slot))
+            courses.append(choices[i][-9:].strip())
             parts = courses[slot].split("_")
-            string = "{} {}".format(parts[0], parts[1])
-            subj = "{}".format(parts[0])
-            # coursetuple = (subj, courses[slot])
-            chosen_courses[subj] = (subj,string)
-            courselist.append(string)
-            subjlist.append(subj)
+            # for x in parts:
+            # print "Subj {}; Course is {}".format(parts[0], parts[1])
+            # coursenum = str(parts[1])
+            # subj = str(parts[0])
+            # coursetuple = (subj, coursenum)
+            # chosen_courses.append(coursetuple)
+            # courselist.append(coursenum)
+            # subjlist.append(subj)
         #parse or not, continue iterating 
         n += 1
 
@@ -82,10 +87,10 @@ def main():
         tallyed_list = sorted(subjlist, key = lambda x: x[1], reverse=True)
         print "tallyed_list is: {} \n".format(tallyed_list)
 
-    rank = Counter(subjects)
-    print "rank variable is: {} \n".format(rank)
+    # rank = Counter(subjects)
+    # print "rank variable is: {} \n".format(rank)
 
-    print "The following subjects were chosen {}".format(chosen)
+    print "The following courses were chosen {}".format(courses)
 
 
 #list filter 
