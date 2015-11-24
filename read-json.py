@@ -9,7 +9,13 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("filename")
+    parser.add_argument('--debug', '-d', action='store_true')
     args = parser.parse_args()
+
+    if args.debug:
+        DEBUG = True
+    else:
+        DEBUG = False
 
     # Read file
     with open(args.filename, 'r') as json_file:
@@ -25,59 +31,84 @@ def main():
     slot = 0
 
     # dictionaries for courses, subjects
-    courses = {}
-    subjects = {}
-    alphas = []
-    courselist = []
-    subjlist = []
+    courses = []
+    chosen_courses = {}
+    courselist = [] #list
+    subjlist = [] #list
+    chosen = {} #dictionary
+    n = 0
+    parse = False
+    
     for i in choices: 
         # print i, choices[i]
         if (i[:9] == 'dgre-slot' or i[:8] == 'req_slot'):
             slot += 1
-            courses[slot] = choices[i][-9:].strip()
-            parts = courses[slot].split("_")
-            subjects[i] = [parts[1]]
-            string = "{} {}".format(parts[0], parts[1])
-            subj = "{}".format(parts[0])
-            courselist.append(string)
-            subjlist.append(subj)
-            # alphas[parts[0]] = 1
-            # subjects[i].append(subjects[parts[1]])
+            parse = True
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
                 slot += 1
-                courses[slot] = choices[i][-9:].strip()
-                parts = courses[slot].split("_")
-                subjects[i] = parts[1]
+                parse = True
 
-                string = " %s: - %s; " % (parts[0], parts[1])
-                l.append(string)
+        if(parse):
+            courses.append(int(slot))
+            courses[slot] = choices[i][-9:].strip()
+            parts = courses[slot].split("_")
+            string = "{} {}".format(parts[0], parts[1])
+            subj = "{}".format(parts[0])
+            # coursetuple = (subj, courses[slot])
+            chosen_courses[subj] = (subj,string)
+            courselist.append(string)
+            subjlist.append(subj)
+        #parse or not, continue iterating 
+        n += 1
+
+    choices = Choices(subjlist, courselist) #replace raw json input with cleaned python object
 
     print "There are {} slots with courses specified".format(slot)
 
-    s = "\n".join(courselist)
-    print s
+    if(DEBUG):
+        for x in chosen_courses: #prints each subject
+            print chosen_courses[x]
 
-    q = '\n'.join(subjlist)
-    print q
+    ranked_subj = [[x,subjlist.count(x)] for x in set(subjlist)]
 
-    print [[x,subjlist.count(x)] for x in set(subjlist)]
+    for subj in ranked_subj:
+        print "{} courses with {} alpha".format(ranked_subj[subj],subj)
+
+    for x in choices.subjlist:
+        print "Subject is {}, Course is".format(x)
+
+    if(DEBUG):
+        tallyed_list = sorted(subjlist, key = lambda x: x[1], reverse=True)
+        print "tallyed_list is: {} \n".format(tallyed_list)
 
     rank = Counter(subjects)
-    # Counter({'blue': 3, 'red': 2, 'yellow': 1})
-    
-    print "The following subjects were chosen {}".format(alphas)
+    print "rank variable is: {} \n".format(rank)
+
+    print "The following subjects were chosen {}".format(chosen)
+
+
+#list filter 
+# l = [x for x in l if x != 0]
+
+############# FUNC - store elsewhere? ###############
 
 def isset(variable):
     return variable in locals() or variable in globals()
 
-def fetch(course):
+def fetch(course):  #returns object
     url = "http://hilo.hawaii.edu/courses/api/1.1/subject/{}".format(course)
+    # Parse JSON into an object with attributes corresponding to dict keys.
+    data = json.loads(data, object_hook=lambda d: namedtuple('course', d.keys())(*d.values()))
+    return data
 
-def fetchSubj(alpha):
-    url = "http://hilo.hawaii.edu/courses/api/1.1/subject/{}".format(alpha)
-    return 
-##########################
+
+########################## Choices Class - extract?####
+class Choices(object):
+    def __init__(self,list_of_subjects, list_of_courses):
+        self.courselist = list_of_courses
+        self.subjlist = list_of_subjects
+
 
 if __name__ == '__main__':
     main()
