@@ -31,11 +31,20 @@ def main():
     slot = 0
 
     # dictionaries for courses, subjects
-    courses = []
-    chosen_courses = []
-    courselist = [] #list
-    subjlist = [] #list
-    chosen = {} #dictionary
+
+    courses = {} #dictionary / list
+    # chosen_courses = {}
+    subjects = {} # list?
+    # alphas = [] # array?
+    courselist = []
+    subjlist = []
+    # chosen = []
+
+    # courses = []
+    # chosen_courses = {}
+    # courselist = [] #list
+    # subjlist = [] #list
+    # chosen = {} #dictionary
     n = 0
     parse = False
 
@@ -44,53 +53,77 @@ def main():
         if (i[:9] == 'dgre-slot' or i[:8] == 'req_slot'):
             slot += 1
             parse = True
-            guts = choices[i][-9:].strip()
-            courses.append(guts)
+            courses[slot] = choices[i][-9:].strip()
+            parts = courses[slot].split("_")
+            subjects[n] = [parts[1]]
+            string = "{} {}".format(parts[0], parts[1])
+            subj = "{}".format(parts[0])
+            # coursetuple = (subj, courses[slot])
+
+            # chosen_courses[subj] = string 
+                       # chosen[n] = string
+            # chosen.append(coursetuple)
+            courselist.append(string)
+            subjlist.append(subj)
+            
+            # guts = choices[i][-9:].strip()
+            # courses.append(guts)
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
                 slot += 1
-                parse = True
-                guts = choices[i][-9:].strip()
-                courses.append(guts)
-        if(parse):
-            # courses.append(int(slot))
-            courses.append(choices[i][-9:].strip())
-            parts = courses[slot].split("_")
-            # for x in parts:
-            # print "Subj {}; Course is {}".format(parts[0], parts[1])
-            # coursenum = str(parts[1])
-            # subj = str(parts[0])
-            # coursetuple = (subj, coursenum)
-            # chosen_courses.append(coursetuple)
-            # courselist.append(coursenum)
-            # subjlist.append(subj)
-        #parse or not, continue iterating 
+                # parse = True
+                # guts = choices[i][-9:].strip()
+                # courses.append(guts)
+
+                courses[slot] = choices[i][-9:].strip()
+                parts = courses[slot].split("_")
+                subjects[i] = (parts[1], parts[0])
+                string = "{} {}".format(parts[0], parts[1])
+                subj = "{}".format(parts[0])
+                # coursetuple = (subj, courses[slot])
+                # chosen[n] = coursetuple
+                # courselist.append(string)
+                subjlist.append(subj)
+
+        # if(parse):
+        #     courses[slot] = choices[i][-9:].strip()
+        #     parts = courses[slot].split("_")
+        #     subjects[i] = (parts[1], parts[0])
+        #     string = "{} {}".format(parts[0], parts[1])
+        #     subj = "{}".format(parts[0])
+        #     coursetuple = (subj, courses[slot])
+        #     chosen[n] = coursetuple
+        #     courselist.append(string)
+        #     subjlist.append(subj)
+        # parse or not, continue iterating 
         n += 1
 
     choices = Choices(subjlist, courselist) #replace raw json input with cleaned python object
 
     print "There are {} slots with courses specified".format(slot)
 
-    if(DEBUG):
-        for x in chosen_courses: #prints each subject
-            print chosen_courses[x]
-
     ranked_subj = [[x,subjlist.count(x)] for x in set(subjlist)]
 
     for subj in ranked_subj:
-        print "{} courses with {} alpha".format(ranked_subj[subj],subj)
+        print "{} courses with alpha".format(subj) #, subj.count(ranked_subj))
 
-    for x in choices.subjlist:
-        print "Subject is {}, Course is".format(x)
+    courses = sorted(choices.courselist, key = lambda x: x[1], reverse=True)
+    print "The following courses were chosen\n\r {} \t".format(courses)
 
     if(DEBUG):
-        tallyed_list = sorted(subjlist, key = lambda x: x[1], reverse=True)
-        print "tallyed_list is: {} \n".format(tallyed_list)
+
+        subjects = set(choices.subjlist)
+        for x in subjects: #prints each subject
+            print "The sorted subject list is: \n {} \t".format(x)
+
+        subjtally = sorted(choices.subjlist, key = lambda x: x[1], reverse=True)
+        subjset = set(subjtally)
+        print "The sorted cubject list is: {} \n".format(subjset)
 
     # rank = Counter(subjects)
     # print "rank variable is: {} \n".format(rank)
 
-    print "The following courses were chosen {}".format(courses)
+
 
 
 #list filter 
