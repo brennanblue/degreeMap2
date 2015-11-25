@@ -49,7 +49,7 @@ def main():
             subj = "{}".format(parts[0])
             courselist.append(course)
             subjlist.append(subj)
-            coursedetail = getCourse(course)
+            coursedetail = getCourse(courses[slot])
             print "{}  - [course] \n\r ".format (coursedetail)
             if DEBUG:
                 subj_catalog = fetch(subj)
@@ -67,6 +67,7 @@ def main():
                 courselist.append(course)
                 subjlist.append(subj)
                 coursedetail = getCourse(course)
+
                 print "{}  - [course] \n\r ".format (coursedetail)
                 if DEBUG:
                     subj_catalog = fetch(subj)
@@ -113,6 +114,7 @@ def fetch(alpha):  #returns object
 
 def getCourse(coursenum): # returns course detail
      url = "http://hilo.hawaii.edu/courses/api/1.1/course/{}".format(coursenum)
+     print url
      response = urllib2.urlopen(url)
      data = json.load(response)
      return data
