@@ -2,6 +2,7 @@
 
 import sys
 import json
+import urllib2
 import argparse
 from collections import namedtuple, Counter
 
@@ -27,26 +28,14 @@ def main():
         sys.stderr.write("Error reading json file\n")
         sys.exit()
 
-    #iterator
-    slot = 0
-
     # dictionaries for courses, subjects
-
     courses = {} #dictionary / list
-    # chosen_courses = {}
-    subjects = {} # list?
-    # alphas = [] # array?
-    courselist = []
-    subjlist = []
-    # chosen = []
-
-    # courses = []
-    # chosen_courses = {}
-    # courselist = [] #list
-    # subjlist = [] #list
-    # chosen = {} #dictionary
+    subjects = {} # dictionary / set
+    courselist = [] # list / array
+    subjlist = [] # list / array
     n = 0
-    parse = False
+    slot = 0 #iterators
+    # parse = False
 
     for i in choices: 
         # print i, choices[i]
@@ -56,10 +45,15 @@ def main():
             courses[slot] = choices[i][-9:].strip()
             parts = courses[slot].split("_")
             subjects[n] = [parts[1]]
-            string = "{} {}".format(parts[0], parts[1])
+            course = "{} {}".format(parts[0], parts[1])
             subj = "{}".format(parts[0])
-            courselist.append(string)
+            courselist.append(course)
             subjlist.append(subj)
+            coursedetail = getCourse(course)
+            print "{}  - [course] \n\r ".format (coursedetail)
+            if DEBUG:
+                subj_catalog = fetch(subj)
+                print "Prepare for it.... \n\r {}".format(subj_catalog)
 
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
@@ -68,17 +62,17 @@ def main():
                 courses[slot] = choices[i][-9:].strip()
                 parts = courses[slot].split("_")
                 subjects[n] = (parts[1], parts[0])
-                string = "{} {}".format(parts[0], parts[1])
+                course = "{} {}".format(parts[0], parts[1])
                 subj = "{}".format(parts[0])
-                courselist.append(string)
+                courselist.append(course)
                 subjlist.append(subj)
+                coursedetail = getCourse(course)
+                print "{}  - [course] \n\r ".format (coursedetail)
+                if DEBUG:
+                    subj_catalog = fetch(subj)
+                    print "Prepare for it.... \n\r {}".format(subj_catalog)
 
         # if(parse):
-        #     courses[slot] = choices[i][-9:].strip()
-        #     parts = courses[slot].split("_")
-        #     subjects[i] = (parts[1], parts[0])
-        #     string = "{} {}".format(parts[0], parts[1])
-        #     subj = "{}".format(parts[0])
         #     coursetuple = (subj, courses[slot])
         #     chosen[n] = coursetuple
         #     subjlist.append(subj)
@@ -86,22 +80,19 @@ def main():
         n += 1
 
     choices = Choices(subjlist, courselist) #replace raw json input with cleaned python object
-
     print "There are {} slots with courses specified".format(slot)
 
-    courses = sorted(choices.courselist, key = lambda x: x[1], reverse=True)
-    print "The following courses were chosen\n\r {} \t".format(courses)
+    order = sorted(choices.courselist, key = lambda x: x[1], reverse=True)
+    print "The following courses were chosen\n\r {} \t".format(order)
 
-    ranked_subj = [[x,subjlist.count(x)] for x in set(subjlist)]
-
+    ranked_subj = [[x,choices.subjlist.count(x)] for x in set(choices.subjlist)]
     for subj in ranked_subj:
         print "{} courses with alpha".format(subj) #, subj.count(ranked_subj))
 
     if(DEBUG):
 
         subjtally = sorted(choices.subjlist, key = lambda x: x[1], reverse=True)
-        subjset = set(subjtally)
-        print "The sorted subject list is: {} \n".format(subjset)
+        print "The sorted subject list is: {} \n".format(subjtally)
 
 #list filter 
 # l = [x for x in l if x != 0]
@@ -111,19 +102,26 @@ def main():
 def isset(variable):
     return variable in locals() or variable in globals()
 
-def fetch(course):  #returns object
-    url = "http://hilo.hawaii.edu/courses/api/1.1/subject/{}".format(course)
+def fetch(alpha):  #returns object
+    subjurl =  "http://hilo.hawaii.edu/courses/api/1.1/subject/{}".format(alpha)
     # Parse JSON into an object with attributes corresponding to dict keys.
-    data = json.loads(data, object_hook=lambda d: namedtuple('course', d.keys())(*d.values()))
+    response = urllib2.urlopen(subjurl)
+    data = json.load(response) 
+    # choices = json.loads(contents)
+    # data = json.loads(data, object_hook=lambda d: namedtuple('course', d.keys())(*d.values()))
     return data
 
+def getCourse(coursenum): # returns course detail
+     url = "http://hilo.hawaii.edu/courses/api/1.1/course/{}".format(coursenum)
+     response = urllib2.urlopen(url)
+     data = json.load(response)
+     return data
 
 ########################## Choices Class - extract?####
 class Choices(object):
     def __init__(self,list_of_subjects, list_of_courses):
         self.courselist = list_of_courses
         self.subjlist = list_of_subjects
-
 
 if __name__ == '__main__':
     main()
