@@ -41,7 +41,7 @@ def main():
 
     # dictionaries for courses, subjects
     courses = {}
-    course_meta = {'alpha':None, 'course': None, 'number': None, 'credits': None} #, 'colleges':[]}
+    course_meta = {'alpha':None, 'course': None, 'number': None, 'credits': None, 'college':None} #, 'colleges':[]}
     #dictionary - use keyed index as with known, fetch detail
     course_detail = {'type': None, 'title': None, 'desc':None, 'pre':None }
     subjects = {} # dictionary / set
@@ -72,7 +72,7 @@ def main():
             coursedetail = getCourse(course_meta['course'])
             dir(coursedetail)
             # info(coursedetail)
-            print "Course Title is {}".format(coursedetail)
+            # print "Course Title is {}".format(coursedetail['course_title'])
 
             if VERBOSE:
                 print "{}  - [course] \n\r ".format (coursedetail)
@@ -80,33 +80,38 @@ def main():
                 subj_catalog = fetch(subj)
                 print "Prepare for it.... \n\r {}".format(subj_catalog)
             
-            for i, detail in enumerate(coursedetail):
-                print "Index is {}, data is {}".format(i, detail)
+            # for detail in coursedetail:
+            #     print "Index is {}\n".format(detail)
+                #how do I get associated value? 
 
-            # course_title = str(coursedetail['course_title'])
-            # course_detail['title'] = course_title
-            # colleges = str(coursedetail['college'])
-            # course_meta['colleges'] = colleges.split("/")
-            # course_detail['desc'] = str(coursedetail['description'])
-            # if (len(coursedetail['credits']) > 1 ):
-            #     course_credits = int(coursedetail['credits'])
-            # else:
-            #     course_credits = str(coursedetail['credits'])
-            #     range = course_meta['credits'].split("-")
-            #     low = int(range[0].strip)
-            #     high = int(range[1].strip)
-            # alpha = str(coursedetail['alpha'])
-            # contact_type = str(coursedetail['alpha'])
+            course_title = str(coursedetail['course_title'])
+            course_detail['title'] = course_title
+            colleges = str(coursedetail['college'])
+            course_meta['colleges'] = colleges.split("/")
+            description = str(coursedetail['description'])
+            course_detail['desc'] = description
+            if (len(coursedetail['credits']) > 1 ):
+                course_credits = int(coursedetail['credits'])
+            else:
+                course_credits = str(coursedetail['credits'])
+                # range = course_meta['credits'].split("-")
+                # low = int(range[0].strip)
+                # high = int(range[1].strip)
+            alpha = str(coursedetail['alpha'])
+            contact_type = str(coursedetail['alpha'])
             # description, pre = desc.split(" Pre: ")
-            #     #do some tuple packing!
-            # tag = (subj, course, hours)
-            # meta = (contact_type, college)
+                #do some tuple packing!
+            tag = (subj, course, course_credits)
+            meta = (contact_type, colleges)
             # if desc == description:
             #     detail = (title, desc)
             # else:
-            #     detail = (title, description, pre)
+            detail = (course_title, description)
+            manifest[course] = (tag, detail, meta)
+            print tag
+            if VERBOSE:
+                print manifest
 
-            # manifest[course] = (tag, detail, meta)
             # print pre
 
 
@@ -202,10 +207,10 @@ def main():
         uber["detail"] = ()
         print uber
 
-    chosen = set(chosen_courses)
-    for choice in chosen:
+    # chosen = set(chosen_courses)
+    # for choice in chosen:
 
-        print "{}\t".format(choice)
+    #     print "{}\t".format(choice)
 
     if(DEBUG):
 
