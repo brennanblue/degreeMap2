@@ -16,6 +16,7 @@ def main():
     parser.add_argument("filename")
     parser.add_argument('--debug', '-d', action='store_true')
     parser.add_argument('--verbose', '-v', action='store_true')
+    parser.add_argument('--broken', '-b', action='store_true')
 
     args = parser.parse_args()
 
@@ -23,6 +24,11 @@ def main():
         DEBUG = True
     else:
         DEBUG = False
+
+    if args.broken:
+        BROKEN = True
+    else:
+        BROKEN = False
 
     if args.verbose:
         VERBOSE = True
@@ -99,7 +105,12 @@ def main():
                 # high = int(range[1].strip)
             alpha = str(coursedetail['alpha'])
             contact_type = str(coursedetail['alpha'])
-            # description, pre = desc.split(" Pre: ")
+            if BROKEN:
+
+                parts = description.split(" Pre: ")
+                if parts[1]:
+                    print "{}\n".format(parts[1])
+            
                 #do some tuple packing!
             tag = (subj, course, course_credits)
             meta = (contact_type, colleges)
