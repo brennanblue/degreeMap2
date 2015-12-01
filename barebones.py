@@ -5,10 +5,6 @@ import json
 import urllib2
 import argparse
 from collections import namedtuple, Counter
-# from sortedcontainers import SortedList, SortedSet, SortedDict
-# help(SortedList)
-# help(SortedSet)
-# help (SortedDict)
 
 def main():
     # Parse command line arguments
@@ -72,7 +68,7 @@ def main():
             coursedetail = getCourse(course_meta['course'])
             dir(coursedetail)
             # info(coursedetail)
-            print "Course Title is {}".format(coursedetail)
+            # print "Course Title is {}".format(coursedetail)
 
             if VERBOSE:
                 print "{}  - [course] \n\r ".format (coursedetail)
@@ -82,33 +78,6 @@ def main():
             
             for i, detail in enumerate(coursedetail):
                 print "Index is {}, data is {}".format(i, detail)
-
-            # course_title = str(coursedetail['course_title'])
-            # course_detail['title'] = course_title
-            # colleges = str(coursedetail['college'])
-            # course_meta['colleges'] = colleges.split("/")
-            # course_detail['desc'] = str(coursedetail['description'])
-            # if (len(coursedetail['credits']) > 1 ):
-            #     course_credits = int(coursedetail['credits'])
-            # else:
-            #     course_credits = str(coursedetail['credits'])
-            #     range = course_meta['credits'].split("-")
-            #     low = int(range[0].strip)
-            #     high = int(range[1].strip)
-            # alpha = str(coursedetail['alpha'])
-            # contact_type = str(coursedetail['alpha'])
-            # description, pre = desc.split(" Pre: ")
-            #     #do some tuple packing!
-            # tag = (subj, course, hours)
-            # meta = (contact_type, college)
-            # if desc == description:
-            #     detail = (title, desc)
-            # else:
-            #     detail = (title, description, pre)
-
-            # manifest[course] = (tag, detail, meta)
-            # print pre
-
 
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
@@ -132,45 +101,13 @@ def main():
                 for detail in course_obj:  # not iterable.
                     print detail
 
-                # for attrib, attrib_data in enumerate(course_obj):
-                #     print "attrib = {}, attrib_data = {}\n".format(attrib,attrib_data)
-
                 if VERBOSE:
                     print "{}  - [course] \n\r ".format (coursedetail)
                 if DEBUG:
                     subj_catalog = fetch(subj)
                     print "Prepare for it.... \n\r {}".format(subj_catalog)
-                # title = str(coursedetail['course_title'])
-                # desc = str(coursedetail['description'])
-                # if (len(coursedetail['credits']) > 1 ):
-                #     credits = int(coursedetail['credits'])
-                # else:
-                #     credits = str(coursedetail['credits'])
-                #     range = credits.split("-")
-                #     low = int(range[0].strip)
-                #     high = int(range[1].strip)
-                # alpha = str(coursedetail['alpha'])
-                # contact_type = str(coursedetail['alpha'])
-                # colleges = str(coursedetail['college'])
-                # college = colleges.split("/")
-                # description, pre = desc.split(" Pre: ")
-                #     #do some tuple packing!
-                # tag = (subj, course, hours)
-                # meta = (contact_type, college)
-                # if desc == description:
-                #     detail = (title, desc)
-                # else:
-                #     detail = (title, description, pre)
-                # manifest[course] = (tag, detail, meta)
-                # print pre
+               
 
-
-        # if(parse):
-        #     coursetuple = (subj, courses[slot])
-        #     chosen[n] = coursetuple
-        #     subjlist.append(subj)
-        # parse or not, continue iterating 
-        # n += 1
     ECON_131 = CourseObj.parse("Econ / Econ 131 / Intro to Microeconomics / 3")
     print "{}".format(ECON_131)
 
@@ -183,20 +120,9 @@ def main():
     order = sorted(choices.courselist, key = lambda x: x[1], reverse=True)
     print "The following courses were chosen\n\r {} \t".format(order)
 
-    # for i in courses:
-    #     print chosen_courses[i-1]
-
     uber = {}
     ranked_subj = [[x,choices.subjlist.count(x)] for x in set(choices.subjlist)]
     for subj in ranked_subj:
-        # print "{} courses with alpha".format(subj[0]) #, subj.count(ranked_subj))
-        # uber["subject"] = subj[0]
-        # subj_courses = {}
-        # coursetally =[]
-        # for course in courselist:
-        #     if subj[0] in course:
-        #         coursetally.append(course)
-        #         courselist.remove(course)
 
         uber["courses"] = (subj[0],subj[1])
         uber["detail"] = ()
@@ -211,9 +137,6 @@ def main():
 
         subjtally = sorted(choices.subjlist, key = lambda x: x[1], reverse=True)
         print "The sorted subject list is: {} \n".format(subjtally)
-
-#list filter 
-# l = [x for x in l if x != 0]
 
 ############# FUNC - store elsewhere? ###############
 
@@ -242,23 +165,6 @@ def getCourseDetail(coursenum):  # returns object of type course
     data = json.load(response)
     for attrib, attrib_data in enumerate(data):
         print "attrib = {}, attrib_data = {}\n".format(attrib,attrib_data)
-
-
-    # title = str(data['course_title'])
-    # desc = str(data['description'])
-    # if (len(data['credits']) > 1 ):
-    #     credits = int(data['credits'])
-    # else:
-    #     credits = str(data['credits'])
-    #     range = credits.split("-")
-    #     low = int(range[0].strip)
-    #     high = int(range[1].strip)
-    # alpha = str(data['alpha'])
-    # contact_type = str(data['alpha'])
-    # colleges = str(data['college'])
-    # # college = colleges.split("/")
-    # contact_type = str(data['contact_type'])
-    # object = CourseObj(subj, name, title, credits, desc, colleges, contact_type)
     return data
 
 def getCoursePrereqs(alpha, number):
