@@ -5,6 +5,10 @@ import json
 import urllib2
 import argparse
 from collections import namedtuple, Counter
+# from sortedcontainers import SortedList, SortedSet, SortedDict
+# help(SortedList)
+# help(SortedSet)
+# help (SortedDict)
 
 def main():
     # Parse command line arguments
@@ -36,10 +40,12 @@ def main():
         sys.exit()
 
     # dictionaries for courses, subjects
-    courses = {'alpha':None, 'course': None, 'number': None}
+    courses = {}
+    course_meta = {'alpha':None, 'course': None, 'number': None, 'credits': None} #, 'colleges':[]}
     #dictionary - use keyed index as with known, fetch detail
-    course_detail = {'credits': None, 'title': None, 'desc':None }
+    course_detail = {'type': None, 'title': None, 'desc':None, 'pre':None }
     subjects = {} # dictionary / set
+    manifest = {} # new for 11/30
     courselist = [] # list / array
     subjlist = [] # list / array
     chosen_courses = []
@@ -52,45 +58,99 @@ def main():
         if (i[:9] == 'dgre-slot' or i[:8] == 'req_slot'):
             slot += 1
             # parse = True
-            courses['course'] = str(choices[i][-9:].strip())
-            parts = courses['course'].split("_")
+            course_meta['course'] = str(choices[i][-9:].strip())
+            parts = course_meta['course'].split("_")
             subjects[n] = [parts[1]]
             course = "{} {}".format(parts[0], parts[1])
             subj = "{}".format(parts[0])
-            courses['number'] = str(parts[1])
-            courses['alpha'] = str(parts[0])
-            chosen_courses.append(courses)
+            course_meta['number'] = str(parts[1])
+            course_meta['alpha'] = str(parts[0])
+            courses[slot] = course_meta
+            chosen_courses.append(course)
             courselist.append(course)
             subjlist.append(subj)
-            coursedetail = getCourse(courses['course'])
-            details = {}
-
+            coursedetail = getCourse(course)
             if VERBOSE:
                 print "{}  - [course] \n\r ".format (coursedetail)
             if DEBUG:
                 subj_catalog = fetch(subj)
                 print "Prepare for it.... \n\r {}".format(subj_catalog)
+            for detail in coursedetail:
+                print detail
+            # course_title = str(coursedetail['course_title'])
+            # course_detail['title'] = course_title
+            # colleges = str(coursedetail['college'])
+            # course_meta['colleges'] = colleges.split("/")
+            # course_detail['desc'] = str(coursedetail['description'])
+            # if (len(coursedetail['credits']) > 1 ):
+            #     course_credits = int(coursedetail['credits'])
+            # else:
+            #     course_credits = str(coursedetail['credits'])
+            #     range = course_meta['credits'].split("-")
+            #     low = int(range[0].strip)
+            #     high = int(range[1].strip)
+            # alpha = str(coursedetail['alpha'])
+            # contact_type = str(coursedetail['alpha'])
+            # description, pre = desc.split(" Pre: ")
+            #     #do some tuple packing!
+            # tag = (subj, course, hours)
+            # meta = (contact_type, college)
+            # if desc == description:
+            #     detail = (title, desc)
+            # else:
+            #     detail = (title, description, pre)
+
+            # manifest[course] = (tag, detail, meta)
+            # print pre
+
 
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
                 slot += 1
                 # parse = True
-                courses['course'] = choices[i][-9:].strip()
-                parts = courses['course'].split("_")
+                course_meta['course'] = choices[i][-9:].strip()
+                parts = course_meta['course'].split("_")
                 subjects[n] = (parts[1], parts[0])
                 course = "{} {}".format(parts[0], parts[1])
                 subj = "{}".format(parts[0])
-                courses['number'] = parts[1]
-                courses['alpha'] = parts[0]
+                course_meta['number'] = str(parts[1])
+                course_meta['alpha'] = str(parts[0])
+                courses[slot] = course_meta
                 courselist.append(course)
                 subjlist.append(subj)
-                chosen_courses.append(courses)
+                chosen_courses.append(course)
                 coursedetail = getCourse(course)
+                for detail in coursedetail:
+                    print detail
                 if VERBOSE:
                     print "{}  - [course] \n\r ".format (coursedetail)
                 if DEBUG:
                     subj_catalog = fetch(subj)
                     print "Prepare for it.... \n\r {}".format(subj_catalog)
+                # title = str(coursedetail['course_title'])
+                # desc = str(coursedetail['description'])
+                # if (len(coursedetail['credits']) > 1 ):
+                #     credits = int(coursedetail['credits'])
+                # else:
+                #     credits = str(coursedetail['credits'])
+                #     range = credits.split("-")
+                #     low = int(range[0].strip)
+                #     high = int(range[1].strip)
+                # alpha = str(coursedetail['alpha'])
+                # contact_type = str(coursedetail['alpha'])
+                # colleges = str(coursedetail['college'])
+                # college = colleges.split("/")
+                # description, pre = desc.split(" Pre: ")
+                #     #do some tuple packing!
+                # tag = (subj, course, hours)
+                # meta = (contact_type, college)
+                # if desc == description:
+                #     detail = (title, desc)
+                # else:
+                #     detail = (title, description, pre)
+                # manifest[course] = (tag, detail, meta)
+                # print pre
+
 
         # if(parse):
         #     coursetuple = (subj, courses[slot])
@@ -98,6 +158,7 @@ def main():
         #     subjlist.append(subj)
         # parse or not, continue iterating 
         # n += 1
+    print manifest
 
     choices = Choices(subjlist, courselist) #replace raw json input with cleaned python object
     print "There are {} slots with courses specified".format(slot)
@@ -108,7 +169,8 @@ def main():
     order = sorted(choices.courselist, key = lambda x: x[1], reverse=True)
     print "The following courses were chosen\n\r {} \t".format(order)
 
-    print courses
+    # for i in courses:
+    #     print chosen_courses[i-1]
 
     uber = {}
     ranked_subj = [[x,choices.subjlist.count(x)] for x in set(choices.subjlist)]
@@ -123,11 +185,13 @@ def main():
         #         courselist.remove(course)
 
         uber["courses"] = (subj[0],subj[1])
-
+        uber["detail"] = ()
         print uber
 
-    for choice in chosen_courses:
-        print "{}.\n".format(choice)
+    chosen = set(chosen_courses)
+    for choice in chosen:
+
+        print "{}\t".format(choice)
 
     if(DEBUG):
 
