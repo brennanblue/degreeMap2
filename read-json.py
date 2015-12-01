@@ -224,7 +224,7 @@ def fetch(alpha):  #returns object
     subjurl =  "http://hilo.hawaii.edu/courses/api/1.1/subject/{}".format(alpha)
     # Parse JSON into an object with attributes corresponding to dict keys.
     response = urllib2.urlopen(subjurl)
-    data = json.load(response) 
+    data = json.loads(response) 
     # choices = json.loads(contents)
     # data = json.loads(data, object_hook=lambda d: namedtuple('course', d.keys())(*d.values()))
     return data
@@ -234,7 +234,7 @@ def getCourse(coursenum): # returns course detail
     # print url
     response = urllib2.urlopen(url)
     data = json.load(response)
-    return data
+    return data[0]
 
 def getCourseDetail(coursenum):  # returns object of type course
     url = "http://hilo.hawaii.edu/courses/api/1.1/course/{}".format(coursenum)
@@ -259,12 +259,12 @@ def getCourseDetail(coursenum):  # returns object of type course
     # # college = colleges.split("/")
     # contact_type = str(data['contact_type'])
     # object = CourseObj(subj, name, title, credits, desc, colleges, contact_type)
-    return data
+    return data[0]
 
 def getCoursePrereqs(alpha, number):
     url = "http://webdev.uhh.hawaii.edu/timeline/courses/_{}.json".format(alpha)
     response = urllib2.urlopen(url)
-    data = json.load(response)
+    data = json.loads(response)
     #drill 
 
 def str_to_course_obj(str):
