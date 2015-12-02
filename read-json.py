@@ -106,10 +106,12 @@ def main():
             alpha = str(coursedetail['alpha'])
             contact_type = str(coursedetail['alpha'])
             if BROKEN:
-
-                parts = description.split(" Pre: ")
-                if parts[1]:
-                    print "{}\n".format(parts[1])
+                if 'Pre:' in description:
+                    parts = description.split(" Pre: ")
+                    if parts[1]:
+                        print "{}\n".format(parts[1])
+                else:
+                    print "No Prereqs!"
             
                 #do some tuple packing!
             tag = (subj, course, course_credits)
