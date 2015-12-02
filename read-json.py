@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--debug', '-d', action='store_true')
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--broken', '-b', action='store_true')
+    parser.add_argument('--titles', '-t', action='store_true')
 
     args = parser.parse_args()
 
@@ -35,6 +36,11 @@ def main():
     else:
         VERBOSE = False
 
+    if args.titles:
+        TITLES = True
+    else:
+        TITLES = False
+
     # Read file
     with open(args.filename, 'r') as json_file:
         contents = json_file.read()
@@ -47,9 +53,9 @@ def main():
 
     # dictionaries for courses, subjects
     courses = {}
-    course_meta = {'alpha':None, 'course': None, 'number': None, 'credits': None, 'college':None} #, 'colleges':[]}
+    course_meta = {'course': None, 'type': None, 'credits': None, 'college':None, 'xlist':None, 'colleges':[]}
     #dictionary - use keyed index as with known, fetch detail
-    course_detail = {'type': None, 'title': None, 'desc':None, 'pre':None }
+    course_detail = {'alpha':None, 'number': None, 'title': None, 'desc':None, 'pre':None }
     subjects = {} # dictionary / set
     manifest = {} # new for 11/30
     courselist = [] # list / array
@@ -69,49 +75,79 @@ def main():
             subjects[n] = [parts[1]]
             course = "{} {}".format(parts[0], parts[1])
             subj = "{}".format(parts[0])
-            course_meta['number'] = str(parts[1])
-            course_meta['alpha'] = str(parts[0])
-            courses[slot] = course_meta
-            chosen_courses.append(course)
+            course_detail['number'] = str(parts[1])
+            course_detail['alpha'] = str(parts[0])
+            # courses[slot] = course_meta
+            # chosen_courses.append(course)
             courselist.append(course)
             subjlist.append(subj)
             coursedetail = getCourse(course_meta['course'])
-            dir(coursedetail)
-            # info(coursedetail)
-            # print "Course Title is {}".format(coursedetail['course_title'])
-
-            if VERBOSE:
-                print "{}  - [course] \n\r ".format (coursedetail)
-            if DEBUG:
-                subj_catalog = fetch(subj)
-                print "Prepare for it.... \n\r {}".format(subj_catalog)
-            
-            # for detail in coursedetail:
-            #     print "Index is {}\n".format(detail)
-                #how do I get associated value? 
-
-            course_title = str(coursedetail['course_title'])
-            course_detail['title'] = course_title
-            colleges = str(coursedetail['college'])
-            course_meta['colleges'] = colleges.split("/")
             description = str(coursedetail['description'])
-            course_detail['desc'] = description
+            # need to have '_' seperator when querying API
+            course_title = str(coursedetail['course_title'])
             if (len(coursedetail['credits']) > 1 ):
                 course_credits = int(coursedetail['credits'])
             else:
                 course_credits = str(coursedetail['credits'])
+            print "\n\rSlot {} [ Course: ] \n\r\t{}: {} [{}]".format(slot,course,course_title,course_credits)
+
+            colleges = str(coursedetail['college'])
+            course_meta['college'] = colleges
+            course_meta['colleges'] = colleges.split("/")
+            if VERBOSE:
+                for college in course_meta['colleges']:
+                    print "College: {}\n".format(college)
+
+            if 'Pre:' in description:
+                parts = description.split(" Pre: ")
+                course_detail['desc'] = parts[0]
+                if parts[1]:
+                    course_detail['pre'] = parts[1]
+                    if '(Same as ' in parts[1]:
+                        course_detail['pre'] = parts[0]
+                        xlistparts = parts[1].split("Same as ")
+                        cleaned = xlistparts[1].split(")")
+                        print "X-listed with {}\n".format(cleaned[0])
+                        prereq = xlistparts[0].split("(")
+                        course_detail['pre'] = prereq[0].strip()
+                        # remove cross list from prerequisite text
+                else:
+                    print "No Prereqs!"
+                    course_detail['desc'] = description
+                    course_detail['pre'] = False
+
+            if '(Attributes:' in description:
+                parts = description.split("(Attributes: ")
+                if course_detail['pre']:  #if pre has attributes in it, clean it up.
+                    pre = course_detail['pre'].split("(Attributes: ")
+                    course_detail['pre'] = pre[0].strip()
+                if parts[1]:
+                    print "[ Attributes: ]\n\r\t"
+                    attrib = parts[1].split(")")
+                    attr = attrib[0].split(", ")
+                    for attrib in attr:
+                       print "{}\t".format(attrib)
+                course_detail['desc'] = parts[0]
+
+            if TITLES:
+                print "[ Description: ] \n\r\t {}".format(course_detail['desc'])
+
+            if course_detail['pre']:
+                print "[ Prerequisite text: ]\n\r\t {}\n".format(course_detail['pre'])
+
+            course_detail['title'] = course_title
+
                 # range = course_meta['credits'].split("-")
                 # low = int(range[0].strip)
                 # high = int(range[1].strip)
             alpha = str(coursedetail['alpha'])
             contact_type = str(coursedetail['alpha'])
-            if BROKEN:
-                if 'Pre:' in description:
-                    parts = description.split(" Pre: ")
-                    if parts[1]:
-                        print "{}\n".format(parts[1])
-                else:
-                    print "No Prereqs!"
+
+            if DEBUG:
+                print "{}  - [course] \n\r ".format (coursedetail)
+            # if BROKEN:
+            #     subj_catalog = fetch(subj)
+            #     print "Prepare for it.... \n\r {}".format(subj_catalog)
             
                 #do some tuple packing!
             tag = (subj, course, course_credits)
@@ -121,9 +157,11 @@ def main():
             # else:
             detail = (course_title, description)
             manifest[course] = (tag, detail, meta)
-            print tag
-            if VERBOSE:
+
+
+            if DEBUG:
                 print manifest
+                print tag
 
             # print pre
 
@@ -139,8 +177,8 @@ def main():
                 subj = "{}".format(parts[0])
                 course_meta['number'] = str(parts[1])
                 course_meta['alpha'] = str(parts[0])
-                courses[slot] = course_meta
-                courselist.append(course)
+                # courses[slot] = course_meta
+                # courselist.append(course)
                 subjlist.append(subj)
                 chosen_courses.append(course)
                 coursedetail = eval(getCourse(course))
@@ -158,29 +196,6 @@ def main():
                 if DEBUG:
                     subj_catalog = fetch(subj)
                     print "Prepare for it.... \n\r {}".format(subj_catalog)
-                # title = str(coursedetail['course_title'])
-                # desc = str(coursedetail['description'])
-                # if (len(coursedetail['credits']) > 1 ):
-                #     credits = int(coursedetail['credits'])
-                # else:
-                #     credits = str(coursedetail['credits'])
-                #     range = credits.split("-")
-                #     low = int(range[0].strip)
-                #     high = int(range[1].strip)
-                # alpha = str(coursedetail['alpha'])
-                # contact_type = str(coursedetail['alpha'])
-                # colleges = str(coursedetail['college'])
-                # college = colleges.split("/")
-                # description, pre = desc.split(" Pre: ")
-                #     #do some tuple packing!
-                # tag = (subj, course, hours)
-                # meta = (contact_type, college)
-                # if desc == description:
-                #     detail = (title, desc)
-                # else:
-                #     detail = (title, description, pre)
-                # manifest[course] = (tag, detail, meta)
-                # print pre
 
 
         # if(parse):
@@ -189,11 +204,11 @@ def main():
         #     subjlist.append(subj)
         # parse or not, continue iterating 
         # n += 1
-    ECON_131 = CourseObj.parse("Econ / Econ 131 / Intro to Microeconomics / 3")
-    print "{}".format(ECON_131)
+    # ECON_131 = CourseObj.parse("Econ / Econ 131 / Intro to Microeconomics / 3")
+    # print "{}".format(ECON_131)
 
     choices = Choices(subjlist, courselist) #replace raw json input with cleaned python object
-    print "There are {} slots with courses specified".format(slot)
+    print "There were {} slots with courses specified".format(slot)
 
     # subjlist = False
     # courselist = False
@@ -204,21 +219,22 @@ def main():
     # for i in courses:
     #     print chosen_courses[i-1]
 
-    uber = {}
-    ranked_subj = [[x,choices.subjlist.count(x)] for x in set(choices.subjlist)]
-    for subj in ranked_subj:
-        # print "{} courses with alpha".format(subj[0]) #, subj.count(ranked_subj))
-        # uber["subject"] = subj[0]
-        # subj_courses = {}
-        # coursetally =[]
-        # for course in courselist:
-        #     if subj[0] in course:
-        #         coursetally.append(course)
-        #         courselist.remove(course)
+    if DEBUG:
+        uber = {}
+        ranked_subj = [[x,choices.subjlist.count(x)] for x in set(choices.subjlist)]
+        for subj in ranked_subj:
+            # print "{} courses with alpha".format(subj[0]) #, subj.count(ranked_subj))
+            # uber["subject"] = subj[0]
+            # subj_courses = {}
+            # coursetally =[]
+            # for course in courselist:
+            #     if subj[0] in course:
+            #         coursetally.append(course)
+            #         courselist.remove(course)
 
-        uber["courses"] = (subj[0],subj[1])
-        uber["detail"] = ()
-        print uber
+            uber["courses"] = (subj[0],subj[1])
+            # uber["detail"] = ()
+            print uber
 
     # chosen = set(chosen_courses)
     # for choice in chosen:
