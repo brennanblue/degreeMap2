@@ -5,12 +5,13 @@ import json  # data format
 import urllib2  # fetch from API url
 import re  # regular expressions
 import logging
+from manifest import Choices
 
 console = logging.getLogger("degree-map")
 
 
-def ingest(io, a):  # json io, argprse object
-
+def ingest(io, a, data=False):  # json io, argprse object
+    # rtrn_data = {}
     rtrn_str = ""
     # rtrn_str = ""  # return output
     crse_meta = {
@@ -47,8 +48,7 @@ def ingest(io, a):  # json io, argprse object
                 crse_crdts = int(details['credits'])
             else:
                 crse_crdts = str(details['credits'])
-            rtrn_str += "\n\r[[[Slot {}]]]\n\r [ Course: ]"
-            rtrn_str += "\n\r\t{}: {} [{}]".format(
+            rtrn_str += "\n\r[ Slot {} ]\n\r {}: {} [{}]\n\r".format(
                 slot, crse, course_title, crse_crdts)
             colleges = str(details['college'])
             crse_meta['college'] = colleges
@@ -70,12 +70,13 @@ def ingest(io, a):  # json io, argprse object
                         prereq = xlistprts[0].split("(")
                         crse_dtl['pre'] = prereq[0].strip()
                         # remove cross list from prerequisite text
-                    hits = re.search(
-                        '([A-Z]{2-4})(?:\w?(\d{3}[A-Z]?))+', crse_dtl['pre'])
-                    # this is the regex serch .  Its failing.  Why?
-                    if hits:
-                        rtrn_str += ("\n\r----PREREQS: {}----\n\r\n\r").format(
-                            hits.group())
+                    if a.broken:
+                        hits = re.search(
+                            '([A-Z]{2-4})(?:\w?(\d{3}[A-Z]?))+', prts[0])
+                        # this is the regex serch .  Its failing.  Why?
+                        if hits:
+                            rtrn_str += ("\n\r - PREREQS: {}\n\r\n\r").format(
+                                hits.group())
                 else:
                     rtrn_str += "No Prereqs!"
                     crse_dtl['desc'] = description
@@ -102,12 +103,12 @@ def ingest(io, a):  # json io, argprse object
                         rtrn_str += crse_chain
 
             if a.titles:
-                rtrn_str += "[ Description: ]\n\r {}".format(crse_dtl['desc'])
+                rtrn_str += "Description:\n\r {}\n\r".format(crse_dtl['desc'])
 
             if crse_dtl['pre']:
                 pretext = crse_dtl['pre'].split(",")
                 for p, pretxt in enumerate(pretext):
-                    rtrn_str += "Prereq #{} is: {}\n\r".format(p, pretxt)
+                    rtrn_str += " - Prereq #{} is: {}\n\r".format(p, pretxt)
                 # rtrn_str += "[ Prereq: ]\n\r\t {}\n".format(crse_dtl['pre'])
 
             crse_dtl['title'] = course_title
@@ -128,8 +129,8 @@ def ingest(io, a):  # json io, argprse object
             manifest[crse] = (tag, detail, meta)
 
             if a.debug:
-                rtrn_str += manifest
-                rtrn_str += tag
+                # print manifest
+                print tag
 
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
@@ -151,7 +152,7 @@ def ingest(io, a):  # json io, argprse object
                     crse_crdts = int(details['credits'])
                 else:
                     crse_crdts = str(details['credits'])
-                rtrn_str += "\n\r[ Slot {} ]\n\r [ {} ]:\n\r\t {} [{}]".format(
+                rtrn_str += "\n\rSlot {}\n\r[ {} ]:\n\r\t {} [{}]\n\r".format(
                     slot, course, course_title, crse_crdts)
 
                 colleges = str(details['college'])
@@ -201,7 +202,7 @@ def ingest(io, a):  # json io, argprse object
                             rtrn_str += crse_chain
 
                 if a.titles:
-                    rtrn_str += "[ Description: ] \n\r\t "
+                    rtrn_str += "\r[ Description: ] \n\r\t "
                     rtrn_str += "{}".format(crse_dtl['desc'])
 
                 if crse_dtl['pre']:
@@ -221,15 +222,40 @@ def ingest(io, a):  # json io, argprse object
                 # do some tuple packing!
                 tag = (subj, course, crse_crdts)
                 meta = (contact_type, colleges)
-
                 detail = (course_title, description)
                 manifest[course] = (tag, detail, meta)
 
                 if a.debug:
                     rtrn_str += manifest
                     rtrn_str += tag
+        else:
+            if a.broken:
+                print "import key is {}, value is {}\r\n".format(i, io[i])
 
-    return rtrn_str
+            if a.debug:
+                # keep trying with this class; maybe its better?
+
+                choices = Choices(subj_lst, crse_lst)
+                # replace raw json input with cleaned python object
+
+                ranked = {}
+                ranked_subj = [[x, choices.subj.count(x)] for x in set(
+                    choices.subj)]
+                for subj in ranked_subj:
+                    ranked["courses"] = (subj[0], subj[1])
+                    # ranked["detail"] = ()
+                    print ranked
+
+            # if(a.broken):
+
+            #     srt = sorted(choices.subj, key=lambda x: x[1], reverse=True)
+            #     print "The sorted subject list is: {} \n".format(srt)
+
+    if data:
+        print "There were {} slots with courses specified".format(slot)
+        return manifest
+    else:
+        return rtrn_str
 
     def debug(loggername):
         logger = logging.getLogger(loggername)
@@ -265,29 +291,25 @@ def get_prereq(alpha, number):  # returns course detail
     l = "http://webdev.uhh.hawaii.edu/timeline/courses/_{}.json".format(alpha)
     response = urllib2.urlopen(l)
     data = json.load(response)
-    rtrn_data = False
+    # rtrn_data = False
+    rtrn_str = ""
     if data['courses']:
         for crse_dtl in data['courses']:
             if crse_dtl['number'] == number:
                 # print crse_dtl
-                for attrib in crse_dtl:
-                    if attrib == 'prereqs':
-                        print("\n\r----[ PREREQ Array ]----\r\n\t")
-                        print("{}\n\r").format(crse_dtl['prereqs'])
-                        for parts in attrib:
+                for attr in crse_dtl:
+                    if attr == 'prereqs':
+                        rtrn_str += "\n\r----[ PREREQ Array ]----\r\n\t"
+                        rtrn_str += "{}\n\r".format(crse_dtl['prereqs'])
+                        for parts in attr:
                             if parts == 'courses':
-                                print("\n\r----[ PREREQ Courses ]----\r\n\t")
-                                print("{}\n\r").format(attrib['courses'])
+                                rtrn_str += "\n\r---[ Prereq Courses ]---\n\r"
+                                rtrn_str += "\t{}\n\r".format(attr['courses'])
                             if parts == 'coreqs':
-                                print("\n\r----[ Co-Req Courses ]----\r\n\t")
-                                print("{}\n\r").format(attrib['core'])
+                                rtrn_str += "\n\r---[ Co-Req Courses ]---\n\r"
+                                rtrn_str += "\t{}\n\r".format(attr['core'])
 
-                # this_course_detail = ast.literal_eval(crse_dtl)
-                # print this_course_detail
-                # if crse_dtl['prereqs']:
-                #     rtrn_data = crse_dtl['prereqs']
-
-    return rtrn_data
+    return rtrn_str  # data
 
 
 def fetch(alpha):  # returns object
