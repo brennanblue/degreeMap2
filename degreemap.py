@@ -8,6 +8,7 @@ import degreeparse
 # import ast # string evaluator
 # from collections import namedtuple
 
+
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()

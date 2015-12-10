@@ -3,9 +3,9 @@
 
 import json  # data format
 import urllib2  # fetch from API url
-import re  # regular expressions
+# import re  # regular expressions
 import logging
-from manifest import Choices
+# from manifest import Choices
 
 console = logging.getLogger("degree-map")
 
@@ -14,242 +14,32 @@ def ingest(io, a, data=False):  # json io, argprse object
     # rtrn_data = {}
     rtrn_str = ""
     # rtrn_str = ""  # return output
-    crse_meta = {
-        'course': None, 'type': None, 'credits': None,
-        'college': None, 'xlist': None, 'colleges': []}
-    crse_dtl = {
-        'alpha': None, 'number': None, 'title': None,
-        'desc': None, 'pre': None, 'prereqs': []}
-    subjects = {}  # dictionary
+    # subjects = {}
     manifest = {}  # dict
-    crse_lst = []  # list / array
-    subj_lst = []  # list / array
-    n = 0
+    # crse_lst = []  # list / array
+    # subj_lst = []  # list / array
+    # n = 0
     slot = 0  # iterators
 
     for i in io:
         # print i, io[i]
         if (i[:9] == 'dgre-slot' or i[:8] == 'req_slot'):
             slot += 1
-            crse_meta['course'] = str(io[i][-9:].strip())
-            prts = crse_meta['course'].split("_")
-            subjects[n] = [prts[1]]
-            crse = "{} {}".format(prts[0], prts[1])
-            subj = "{}".format(prts[0])
-            crse_dtl['number'] = str(prts[1])
-            crse_dtl['alpha'] = str(prts[0])
-            crse_lst.append(crse)
-            subj_lst.append(subj)
-            details = get_course(crse_meta['course'])
-            description = str(details['description'])
-            # need to have '_' seperator when querying API
-            course_title = str(details['course_title'])
-            if (len(details['credits']) > 1):
-                crse_crdts = int(details['credits'])
-            else:
-                crse_crdts = str(details['credits'])
-            rtrn_str += "\n\r[ Slot {} ]\n\r {}: {} [{}]\n\r".format(
-                slot, crse, course_title, crse_crdts)
-            colleges = str(details['college'])
-            crse_meta['college'] = colleges
-            crse_meta['colleges'] = colleges.split("/")
-            if a.verbose:
-                for college in crse_meta['colleges']:
-                    rtrn_str += "College: {}\n".format(college)
-                    console
-            if 'Pre:' in description:
-                prts = description.split(" Pre: ")
-                crse_dtl['desc'] = prts[0]
-                if prts[1]:
-                    crse_dtl['pre'] = prts[1]
-                    if '(Same as ' in prts[1]:
-                        crse_dtl['pre'] = prts[0]
-                        xlistprts = prts[1].split("Same as ")
-                        cleaned = xlistprts[1].split(")")
-                        rtrn_str += "X-listed with {}\n".format(cleaned[0])
-                        prereq = xlistprts[0].split("(")
-                        crse_dtl['pre'] = prereq[0].strip()
-                        # remove cross list from prerequisite text
-                    if a.broken:
-                        hits = re.search(
-                            '([A-Z]{2-4})(?:\w?(\d{3}[A-Z]?))+', prts[0])
-                        # this is the regex serch .  Its failing.  Why?
-                        if hits:
-                            rtrn_str += ("\n\r - PREREQS: {}\n\r\n\r").format(
-                                hits.group())
-                else:
-                    rtrn_str += "No Prereqs!"
-                    crse_dtl['desc'] = description
-                    crse_dtl['pre'] = False
-
-            if '(Attributes:' in description:
-                prts = description.split("(Attributes: ")
-                if crse_dtl['pre']:  # if pre has attributes in it, clean it up
-                    pre = crse_dtl['pre'].split("(Attributes: ")
-                    crse_dtl['pre'] = pre[0].strip()
-                if prts[1]:
-                    rtrn_str += "[ Attributes: ]\n\r\t"
-                    attrib = prts[1].split(")")
-                    attr = attrib[0].split(", ")
-                    for attrib in attr:
-                        rtrn_str += "{}\t".format(attrib)
-                crse_dtl['desc'] = prts[0]
-
+            choice = str(io[i][-9:].strip())  # alpha+'_'+num
+            crse_meta = populate_course_meta(choice)
+            crse_dtl = populate_course_detail(choice)  # redundant?
+            # subjects[n] = subj
+            # crse_lst.append(crse)
+            # subj_lst.append(subj)
             # after processing API data, fetch prereqs from alternate manifest
-            if crse_dtl['pre']:
-                crse_chain = get_prereq(crse_dtl['alpha'], crse_dtl['number'])
-                if a.broken:
-                    if crse_chain:
-                        rtrn_str += crse_chain
-
-            if a.titles:
-                rtrn_str += "Description:\n\r {}\n\r".format(crse_dtl['desc'])
-
-            if crse_dtl['pre']:
-                pretext = crse_dtl['pre'].split(",")
-                for p, pretxt in enumerate(pretext):
-                    rtrn_str += " - Prereq #{} is: {}\n\r".format(p, pretxt)
-                # rtrn_str += "[ Prereq: ]\n\r\t {}\n".format(crse_dtl['pre'])
-
-            crse_dtl['title'] = course_title
-
-            contact_type = str(details['contact_type'])
-
-            if a.debug:
-                rtrn_str += "{}  - [course] \n\r ".format(details)
-
-            # if a.broken:
-            #     subj_catalog = fetch(subj)
-            #     rtrn_str += "Prepre for it.... \n\r {}".format(subj_catalog)
-
-            # do some tuple packing!
-            tag = (subj, crse, crse_crdts)
-            meta = (contact_type, colleges)
-            detail = (course_title, description)
-            manifest[crse] = (tag, detail, meta)
-
-            if a.debug:
-                # print manifest
-                print tag
 
         elif (i[:5] == 'slot-'):
             if (i[6:7] == ' '):
                 slot += 1
-                crse_meta['course'] = str(io[i][-9:].strip())
-                prts = crse_meta['course'].split("_")
-                subjects[n] = [prts[1]]
-                course = "{} {}".format(prts[0], prts[1])
-                subj = "{}".format(prts[0])
-                crse_dtl['number'] = str(prts[1])
-                crse_dtl['alpha'] = str(prts[0])
-                crse_lst.append(course)
-                subj_lst.append(subj)
-                details = get_course(crse_meta['course'])
-                description = str(details['description'])
-                # need to have '_' seperator when querying API
-                course_title = str(details['course_title'])
-                if (len(details['credits']) > 1):
-                    crse_crdts = int(details['credits'])
-                else:
-                    crse_crdts = str(details['credits'])
-                rtrn_str += "\n\rSlot {}\n\r[ {} ]:\n\r\t {} [{}]\n\r".format(
-                    slot, course, course_title, crse_crdts)
-
-                colleges = str(details['college'])
-                crse_meta['college'] = colleges
-                crse_meta['colleges'] = colleges.split("/")
-                if a.verbose:
-                    for college in crse_meta['colleges']:
-                        rtrn_str += "College: {}\n".format(college)
-
-                if 'Pre:' in description:
-                    prts = description.split(" Pre: ")
-                    crse_dtl['desc'] = prts[0]
-                    if prts[1]:
-                        crse_dtl['pre'] = prts[1]
-                        if '(Same as ' in prts[1]:
-                            crse_dtl['pre'] = prts[0]
-                            xlistprts = prts[1].split("Same as ")
-                            cleaned = xlistprts[1].split(")")
-                            rtrn_str += "X-listed with {}\n".format(cleaned[0])
-                            prereq = xlistprts[0].split("(")
-                            crse_dtl['pre'] = prereq[0].strip()
-                            # remove cross list from prerequisite text
-                    else:
-                        rtrn_str += "No Prereqs!"
-                        crse_dtl['desc'] = description
-                        crse_dtl['pre'] = False
-
-                if '(Attributes:' in description:
-                    prts = description.split("(Attributes: ")
-                    if crse_dtl['pre']:  # if pre has attributes, clean it.
-                        pre = crse_dtl['pre'].split("(Attributes: ")
-                        crse_dtl['pre'] = pre[0].strip()
-                    if prts[1]:
-                        rtrn_str += "[ Attributes: ]\n\r\t"
-                        attrib = prts[1].split(")")
-                        attr = attrib[0].split(", ")
-                        for attrib in attr:
-                            rtrn_str += "{}\t".format(attrib)
-                    crse_dtl['desc'] = prts[0]
-
-                # process API data, then fetch prereqs from alternate manifest
-                if crse_dtl['pre']:
-                    crse_chain = get_prereq(
-                        crse_dtl['alpha'], crse_dtl['number'])
-                    if a.broken:
-                        if crse_chain:
-                            rtrn_str += crse_chain
-
-                if a.titles:
-                    rtrn_str += "\r[ Description: ] \n\r\t "
-                    rtrn_str += "{}".format(crse_dtl['desc'])
-
-                if crse_dtl['pre']:
-                    pretext = crse_dtl['pre'].split(",")
-                    for p, pretxt in enumerate(pretext):
-                        rtrn_str += "API Pre: #{} is: {}\n\r".format(p, pretxt)
-                    # rtrn_str += "[ Pre: ]\n\r\t {}\n".format(crse_dtl['pre'])
-
-                crse_dtl['title'] = course_title
-
-                # alpha = str(details['alpha'])
-                contact_type = str(details['contact_type'])
-
-                if a.debug:
-                    rtrn_str += "{}  - [course] \n\r ".format(details)
-
-                # do some tuple packing!
-                tag = (subj, course, crse_crdts)
-                meta = (contact_type, colleges)
-                detail = (course_title, description)
-                manifest[course] = (tag, detail, meta)
-
-                if a.debug:
-                    rtrn_str += manifest
-                    rtrn_str += tag
-        else:
-            if a.broken:
-                print "import key is {}, value is {}\r\n".format(i, io[i])
-
-            if a.debug:
-                # keep trying with this class; maybe its better?
-
-                choices = Choices(subj_lst, crse_lst)
-                # replace raw json input with cleaned python object
-
-                ranked = {}
-                ranked_subj = [[x, choices.subj.count(x)] for x in set(
-                    choices.subj)]
-                for subj in ranked_subj:
-                    ranked["courses"] = (subj[0], subj[1])
-                    # ranked["detail"] = ()
-                    print ranked
-
-            # if(a.broken):
-
-            #     srt = sorted(choices.subj, key=lambda x: x[1], reverse=True)
-            #     print "The sorted subject list is: {} \n".format(srt)
+                choice = str(io[i][-9:].strip())
+                crse_meta = populate_course_meta(choice)
+                crse_dtl = populate_course_detail(choice)  # redundant?
+                print("{}\n\r{}".format(crse_dtl, crse_meta))
 
     if data:
         print "There were {} slots with courses specified".format(slot)
@@ -279,18 +69,126 @@ def ingest(io, a, data=False):  # json io, argprse object
 #     return a+b
 
 
-def get_course(coursenum):  # returns course detail
-    url = "http://hilo.hawaii.edu/courses/api/1.1/course/{}".format(coursenum)
-    # print url
+def get_course(crse):  # returns course detail
+    rtrn_data = False
+    if ' ' in crse:
+        prts = crse.split(" ")
+        crse = "{}_{}".format(prts[0], prts[1])
+    url = "http://hilo.hawaii.edu/courses/api/1.1/course/{}".format(crse)
+    print url
     response = urllib2.urlopen(url)
-    data = json.load(response)
-    return data[0]
+    if response:
+        data = json.load(response)
+        if data:
+            rtrn_data = data[0]
+    return rtrn_data
+
+
+def populate_course_meta(crse):  # returns dictionary of tuples
+    rtrn_str = ""  # not used, but could be w/ flag
+    crse_meta = {
+        'course': None, 'type': None, 'credits': None, 'attrib': [],
+        'college': None, 'colleges': [], 'xlist': []}  # , 'pre': []}
+    # subjects = {}  # dictionary
+    if '_' in crse:
+        prts = crse.split("_")
+    elif ' ' in crse:
+        prts = crse.split(" ")
+        crse = "{}_{}".format(prts[0], prts[1])
+    else:
+        print "Odd input doesn't conform"
+    crse_meta['course'] = crse  # backup for checking
+    print "Checking course Meta: {}".format(crse)
+    details = get_course(crse)
+    # crse_meta['type'] = details['contact_type']  # unicode?
+    if (details['credits']):
+        crse_crdts = str(details['credits'])
+    else:
+        crse_crdts = int(details['credits'])
+    rtrn_str += "\n\r{}:[{}]\n\r".format(crse, crse_crdts)  # unused
+    if '(Attributes:' in details['description']:
+        prts = details['description'].split("(Attributes: ")
+        if prts[1]:
+            rtrn_str += "[ Attributes: ]\n\r"  # unused
+            attrib = prts[1].split(")")
+            attr = attrib[0].split(", ")
+            for attrb in attr:
+                rtrn_str += "{}\t".format(attrb)  # unused
+                crse_meta['attrib'] = rtrn_str
+    colleges = str(details['college'])
+    crse_meta['college'] = colleges
+    crse_meta['colleges'] = colleges.split("/")
+    # if a.verbose:
+    for college in crse_meta['colleges']:
+        rtrn_str += "College: {}\n".format(college)
+    xlistprts = details['description'].split("Same as ")
+    if len(xlistprts) > 1:
+        xlist = xlistprts[1].split(")")
+        rtrn_str += "X-listed with {}\n".format(xlist[0])
+        if xlist[0]:
+            for xlst in xlist[0]:
+                crse_meta['xlist'].append(xlst)
+    rtrn_str += "{}  - [course] \n\r ".format(details)
+    return rtrn_str
+    # if a.broken:
+    # subj_catalog = fetch(subj)
+    # rtrn_str += "Prepre for it.... \n\r {}".format(subj_catalog)
+
+
+def populate_course_detail(crse):
+    rtrn_str = ""  # unused for now
+    crse_dtl = {  # fill in blanks / keyed dictionary
+        'alpha': None, 'number': None, 'title': None,
+        'desc': None, 'pre': None}  # , 'prereqs': [] to meta
+    if '_' in crse:
+        prts = crse.split("_")
+    elif ' ' in crse:
+        prts = crse.split(" ")
+        crse = "{}_{}".format(prts[0], prts[1])
+    else:
+        print "Odd input doesn't conform"
+
+    # crse = "{} {}".format(prts[0], prts[1])
+    # subj = str(prts[0])
+    crse_dtl['number'] = str(prts[1])
+    crse_dtl['alpha'] = str(prts[0])
+    print "Checking course detail : {}".format(crse)
+    details = get_course(crse)  # API call
+    if details:
+        crse_dtl['desc'] = str(details['description'])
+        crse_dtl['title'] = str(details['course_title'])
+        # now onto the difficult part, parsing prereqs
+        if 'Pre:' in crse_dtl['desc']:
+            prts = crse_dtl['desc'].split(" Pre: ")
+            crse_dtl['desc'] = prts[0]
+            if prts[1]:
+                crse_dtl['pre'] = prts[1]
+                if '(Same as ' in prts[1]:
+                    crse_dtl['pre'] = prts[0]
+        else:
+            rtrn_str += "No Prereqs!"
+            crse_dtl['pre'] = False  # redundant?
+
+    if crse_dtl['pre']:
+        crse_chain = get_prereq(crse_dtl['alpha'], crse_dtl['number'])
+        # if a.broken:
+        if crse_chain:
+            rtrn_str += crse_chain
+        pretxt = crse_dtl['pre'].split(",")
+        for p, prtxt in enumerate(pretxt):
+            rtrn_str += " - Prereq #{} is: {}\n\r".format(p, prtxt)
+        # rtrn_str += "[ Prereq: ]\n\r\t {}\n".format(crse_dtl['pre'])
+
+    # if a.titles:
+    rtrn_str += "Description:\n\r {}\n\r".format(crse_dtl['desc'])
+    return crse_dtl
 
 
 def get_prereq(alpha, number):  # returns course detail
     l = "http://webdev.uhh.hawaii.edu/timeline/courses/_{}.json".format(alpha)
     response = urllib2.urlopen(l)
-    data = json.load(response)
+    if response:
+        data = json.load(response)
     # rtrn_data = False
     rtrn_str = ""
     if data['courses']:
